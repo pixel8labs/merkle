@@ -3,8 +3,8 @@ package merkle
 import (
 	"log"
 
-	k256 "github.com/Pixel8Labs/go-solidity-sha3"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	k256 "github.com/pixel8labs/go-solidity-sha3"
 	merkletree "github.com/wealdtech/go-merkletree/v2"
 )
 

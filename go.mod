@@ -3,8 +3,8 @@ module github.com/pixel8labs/merkle
 go 1.22.4
 
 require (
-	github.com/Pixel8Labs/go-solidity-sha3 v0.1.0
 	github.com/ethereum/go-ethereum v1.14.5
+	github.com/pixel8labs/go-solidity-sha3 v0.1.1
 	github.com/wealdtech/go-merkletree/v2 v2.6.0
 )
 
