@@ -1,11 +1,11 @@
 package merkle
 
 import (
-	"log"
+	"crypto/sha256"
+	"fmt"
 
+	"github.com/authur117/merkletree"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	k256 "github.com/pixel8labs/go-solidity-sha3"
-	merkletree "github.com/wealdtech/go-merkletree/v2"
 )
 
 type MerkleTree struct {
@@ -13,43 +13,42 @@ type MerkleTree struct {
 }
 
 func New(src []string) MerkleTree {
-	hashType := k256.New()
-	var data [][]byte
+	var values []merkletree.Content
+
 	for _, s := range src {
-		data = append(data, k256.Address(s))
+		fmt.Println(s)
+		values = append(values, merkletree.Content{
+			X: s,
+		})
 	}
-	// Create the tree
-	tree, err := merkletree.NewTree(
-		merkletree.WithData(data),
-		merkletree.WithHashType(hashType),
-		merkletree.WithSalt(false),
-		merkletree.WithSorted(true),
-	)
-	if err != nil {
-		log.Println("failed to generate merkle tree")
-	}
-	// Fetch the root hash of the tree
+
+	tree := merkletree.New(merkletree.SHA3)
+	tree.WithOption(merkletree.Option{
+		Sort: true,
+	})
+	tree.InitLeaves(values)
+
 	return MerkleTree{
 		tree: tree,
 	}
 }
 
 func Leaf(addr string) []byte {
-	hashType := k256.New()
-	return hashType.Hash(k256.Address(addr))
+	h := sha256.New()
+	h.Write([]byte(addr))
+	return h.Sum(nil)
 }
 
 func (m MerkleTree) Root() string {
-	// return crypto.Keccak256Hash(m.tree.Root()).String()
-	hash := k256.New()
-	return hexutil.Encode(hash.Hash(m.tree.Root()))
+	return hexutil.Encode(m.tree.GetRoot())
 }
 
-func (m MerkleTree) Proof(leaf []byte) (*merkletree.Proof, error) {
-	proof, err := m.tree.GenerateProof(leaf, 0)
-	if err != nil {
-		return nil, err
+func (m MerkleTree) Proof(leaf merkletree.Content) ([][]byte, error) {
+	proof := m.tree.GetProof(leaf, 0)
+	var res [][]byte
+	for _, p := range proof {
+		res = append(res, p.Data)
 	}
 
-	return proof, nil
+	return res, nil
 }
