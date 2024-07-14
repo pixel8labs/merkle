@@ -43,8 +43,11 @@ func (m MerkleTree) Root() string {
 	return hexutil.Encode(m.tree.GetRoot())
 }
 
-func (m MerkleTree) Proof(leaf merkletree.Content) ([][]byte, error) {
-	proof := m.tree.GetProof(leaf, 0)
+func (m MerkleTree) Proof(leaf string) ([][]byte, error) {
+	node := merkletree.Content{
+		X: leaf,
+	}
+	proof := m.tree.GetProof(node, 0)
 	var res [][]byte
 	for _, p := range proof {
 		res = append(res, p.Data)
