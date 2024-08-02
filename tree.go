@@ -2,7 +2,7 @@ package merkle
 
 import (
 	"crypto/sha256"
-	"fmt"
+	"errors"
 
 	"github.com/authur117/merkletree"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -16,7 +16,6 @@ func New(src []string) MerkleTree {
 	var values []merkletree.Content
 
 	for _, s := range src {
-		fmt.Println(s)
 		values = append(values, merkletree.Content{
 			X: s,
 		})
@@ -54,4 +53,23 @@ func (m MerkleTree) Proof(leaf string) ([][]byte, error) {
 	}
 
 	return res, nil
+}
+
+func EncodePacked[T any](types []T, values []T) (string, error) {
+	if len(types) != len(values) {
+		return "", errors.New("params/values length mismatched")
+	}
+
+	var data []string
+	for i := range types {
+		valueType := types[i]
+		value := values[i]
+		encoded, err := Encode(valueType, value)
+		if err != nil {
+			return "", err
+		}
+		data = append(data, encoded)
+	}
+
+	return ConcatHex(data), nil
 }
