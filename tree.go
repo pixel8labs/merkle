@@ -55,16 +55,16 @@ func (m MerkleTree) Proof(leaf string) ([][]byte, error) {
 	return res, nil
 }
 
-func EncodePacked(types []interface{}, values []interface{}) (string, error) {
+func EncodePacked[T any](types []T, values []T) (string, error) {
 	if len(types) != len(values) {
 		return "", errors.New("params/values length mismatched")
 	}
 
 	var data []string
 	for i := range types {
-		_type := types[i]
-		_value := values[i]
-		encoded, err := Encode(_type, _value)
+		valueType := types[i]
+		value := values[i]
+		encoded, err := Encode(valueType, value)
 		if err != nil {
 			return "", err
 		}

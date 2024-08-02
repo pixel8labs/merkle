@@ -3,6 +3,7 @@ package merkle
 import (
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
 	"regexp"
 	"strings"
@@ -40,10 +41,10 @@ func ConcatHex(data []string) string {
 	return sb.String()
 }
 
-func Encode(_type interface{}, value interface{}) (string, error) {
-	if _type == "address" {
+func Encode[T any](valueType T, value T) (string, error) {
+	if any(valueType) == Address {
 		// It's more like a validation because we should accept 0x{string} address
-		address, ok := value.(string)
+		address, ok := any(value).(string)
 		if !ok {
 			return "", errors.New("value is not a string")
 		}
@@ -63,15 +64,15 @@ func Encode(_type interface{}, value interface{}) (string, error) {
 		return padHex, nil
 	}
 
-	if _type == "string" {
-		str, ok := value.(string)
+	if any(valueType) == String {
+		str, ok := any(value).(string)
 		if !ok {
 			return "", errors.New("value is not a string")
 		}
 		return hexutil.Encode([]byte(str)), nil
 	}
 
-	if _type == "uint256" {
+	if any(valueType) == Uint256 {
 		size := 32
 		hexResult, err := NumberToHex(value, NumberToHexOpts{
 			Signed: false,
@@ -86,16 +87,16 @@ func Encode(_type interface{}, value interface{}) (string, error) {
 	return "", nil
 }
 
-func NumberToHex(value interface{}, opts NumberToHexOpts) (string, error) {
+func NumberToHex[T any](value T, opts NumberToHexOpts) (string, error) {
 	var bigValue *big.Int
 
-	switch v := value.(type) {
+	switch v := any(value).(type) {
 	case int:
-		// TODO: update here for future development
+		bigValue = big.NewInt(int64(v))
 	case int64:
-		// TODO: update here for future development
+		bigValue = big.NewInt(v)
 	case uint64:
-		// TODO: update here for future development
+		bigValue = new(big.Int).SetUint64(v)
 	case *big.Int:
 		bigValue = new(big.Int).Set(v)
 	default:
@@ -103,18 +104,16 @@ func NumberToHex(value interface{}, opts NumberToHexOpts) (string, error) {
 	}
 
 	var maxValue, minValue *big.Int
+	maxValue = new(big.Int).SetUint64(uint64(math.MaxInt64)) // Maximum value for int
+	minValue = big.NewInt(0)
+
 	if opts.Size > 0 {
 		bits := uint(opts.Size * 8)
+		maxValue = new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), bits), big.NewInt(1))
 		if opts.Signed {
 			maxValue = new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), bits-1), big.NewInt(1))
 			minValue = new(big.Int).Neg(new(big.Int).Add(maxValue, big.NewInt(1)))
-		} else {
-			maxValue = new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), bits), big.NewInt(1))
-			minValue = big.NewInt(0)
 		}
-	} else {
-		maxValue = new(big.Int).SetUint64(uint64(^uint(0) >> 1)) // Maximum value for int
-		minValue = big.NewInt(0)
 	}
 
 	if (maxValue != nil && bigValue.Cmp(maxValue) > 0) || bigValue.Cmp(minValue) < 0 {
