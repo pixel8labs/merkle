@@ -46,7 +46,7 @@ func (m MerkleTree) Proof(leaf string) ([][]byte, error) {
 	node := merkletree.Content{
 		X: leaf,
 	}
-	proof := m.tree.GetProof(node, 0)
+	proof := m.tree.GetProof(node)
 	var res [][]byte
 	for _, p := range proof {
 		res = append(res, p.Data)
