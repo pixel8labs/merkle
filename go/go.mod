@@ -1,4 +1,4 @@
-module github.com/pixel8labs/merkle
+module github.com/pixel8labs/merkle/go
 
 go 1.22.4
 
